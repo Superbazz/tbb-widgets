@@ -372,7 +372,7 @@
     wrapper.className = `message ${role}`;
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
-    bubble.textContent = text;
+    bubble.innerHTML = text.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
     wrapper.appendChild(bubble);
     messagesEl.appendChild(wrapper);
     scrollToBottom();
