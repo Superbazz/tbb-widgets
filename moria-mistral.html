@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bigger Box — Moria</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f5f3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  .chat-container {
+    width: 100%;
+    max-width: 720px;
+    height: 80vh;
+    min-height: 500px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #eeede9;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+  }
+
+  .chat-header-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #f5a623, #e8761a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .chat-header-text h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .chat-header-text p {
+    font-size: 12px;
+    color: #888;
+    margin-top: 1px;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+  .message {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { align-self: flex-end; align-items: flex-end; }
+  .message.assistant { align-self: flex-start; align-items: flex-start; }
+
+  .message-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    white-space: pre-wrap;
+  }
+
+  .message.user .message-bubble {
+    background: #1a1a1a;
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .message.assistant .message-bubble {
+    background: #f5f5f3;
+    border-bottom-left-radius: 4px;
+  }
+
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 16px;
+    background: #f5f5f3;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+
+  .typing-indicator span {
+    width: 6px;
+    height: 6px;
+    background: #aaa;
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30%            { transform: translateY(-5px); }
+  }
+
+  .chat-input-area {
+    padding: 16px 20px;
+    border-top: 1px solid #eeede9;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: #fff;
+  }
+
+  .chat-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #e0dfd9;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    min-height: 42px;
+    max-height: 120px;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #fafaf8;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input:focus { border-color: #1a1a1a; background: #fff; }
+  .chat-input::placeholder { color: #bbb; }
+
+  .send-button {
+    width: 42px;
+    height: 42px;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .send-button:hover { background: #333; }
+  .send-button:active { transform: scale(0.95); }
+  .send-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+  .send-button svg { width: 18px; height: 18px; fill: #fff; }
+
+  .error-message {
+    align-self: center;
+    font-size: 12px;
+    color: #c0392b;
+    background: #fdf0ef;
+    padding: 8px 14px;
+    border-radius: 8px;
+  }
+
+  .welcome-message {
+    align-self: center;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    padding: 20px 0;
+  }
+
+  .welcome-message strong {
+    display: block;
+    color: #555;
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  /* Feedback section */
+  .feedback-area {
+    padding: 14px 20px;
+    border-top: 1px solid #eeede9;
+    background: #fafaf8;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .feedback-area.visible { display: flex; }
+
+  .feedback-label {
+    font-size: 12px;
+    color: #888;
+  }
+
+  .feedback-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .feedback-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e0dfd9;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+    color: #1a1a1a;
+  }
+
+  .feedback-input:focus { border-color: #1a1a1a; }
+
+  .feedback-btn {
+    padding: 8px 14px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .feedback-btn:hover { background: #333; }
+  .feedback-thanks { font-size: 12px; color: #888; text-align: center; display: none; }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">
+    <div class="chat-header-icon">📦</div>
+    <div class="chat-header-text">
+      <h2>The Bigger Box</h2>
+      <p>Dein Denkpartner</p>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="messages">
+    <div class="welcome-message">
+      <strong>Hallo, willkommen.</strong>
+      Womit möchtest du heute beginnen?
+    </div>
+  </div>
+
+  <div class="chat-input-area">
+    <textarea
+      class="chat-input"
+      id="userInput"
+      placeholder="Schreib deine Frage…"
+      rows="1"
+    ></textarea>
+    <button class="send-button" id="sendBtn" title="Senden">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="feedback-area" id="feedbackArea">
+    <div class="feedback-label">Wie war das Gespräch? (optional)</div>
+    <div class="feedback-row">
+      <input class="feedback-input" id="feedbackInput" type="text" placeholder="Kurze Rückmeldung…" />
+      <button class="feedback-btn" id="feedbackBtn">Senden</button>
+    </div>
+    <div class="feedback-thanks" id="feedbackThanks">Danke für dein Feedback!</div>
+  </div>
+</div>
+
+<script>
+  // ── Configuration ──────────────────────────────────────────────
+  const WEBHOOK_URL   = 'https://hook.eu2.make.com/qwqbls25wsp8i1b5bwvbr9ah0zucsiue';
+  const FEEDBACK_URL  = ''; // optional: add a Make webhook URL to collect feedback
+  const IDLE_TIMEOUT  = 3 * 60 * 1000; // show feedback prompt after 3 min of inactivity
+  // ──────────────────────────────────────────────────────────────
+
+  const messagesEl   = document.getElementById('messages');
+  const inputEl      = document.getElementById('userInput');
+  const sendBtn      = document.getElementById('sendBtn');
+  const feedbackArea = document.getElementById('feedbackArea');
+  const feedbackInput= document.getElementById('feedbackInput');
+  const feedbackBtn  = document.getElementById('feedbackBtn');
+  const feedbackThanks = document.getElementById('feedbackThanks');
+
+  let history = [];
+  let idleTimer = null;
+  let messageCount = 0;
+
+  // Show feedback prompt after idle or after 5+ messages
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(showFeedback, IDLE_TIMEOUT);
+  }
+
+  function showFeedback() {
+    if (messageCount >= 2) feedbackArea.classList.add('visible');
+  }
+
+  // Auto-resize textarea
+  inputEl.addEventListener('input', () => {
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+  });
+
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  feedbackBtn.addEventListener('click', () => {
+    const text = feedbackInput.value.trim();
+    if (FEEDBACK_URL && text) {
+      fetch(FEEDBACK_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({feedback: text, messages: messageCount})
+      }).catch(() => {});
+    }
+    feedbackInput.style.display = 'none';
+    feedbackBtn.style.display = 'none';
+    feedbackThanks.style.display = 'block';
+  });
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function addMessage(role, text) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `message ${role}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = text;
+    wrapper.appendChild(bubble);
+    messagesEl.appendChild(wrapper);
+    scrollToBottom();
+    return wrapper;
+  }
+
+  function showTyping() {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message assistant';
+    wrapper.id = 'typing';
+    wrapper.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+    messagesEl.appendChild(wrapper);
+    scrollToBottom();
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function showError(msg) {
+    const el = document.createElement('div');
+    el.className = 'error-message';
+    el.textContent = msg;
+    messagesEl.appendChild(el);
+    scrollToBottom();
+    setTimeout(() => el.remove(), 5000);
+  }
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    const welcome = messagesEl.querySelector('.welcome-message');
+    if (welcome) welcome.remove();
+
+    addMessage('user', text);
+    history.push({role: 'user', content: text});
+    messageCount++;
+
+    showTyping();
+    resetIdleTimer();
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text, history})
+      });
+
+      removeTyping();
+
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+
+      const data = await res.json();
+      const reply = data.response || data.completion || data.content || 'Keine Antwort erhalten.';
+
+      addMessage('assistant', reply);
+      history.push({role: 'assistant', content: reply});
+      messageCount++;
+
+      // Show feedback after 5+ exchanges
+      if (messageCount >= 10) showFeedback();
+
+    } catch (err) {
+      removeTyping();
+      showError('Etwas ist schiefgelaufen. Bitte versuche es erneut.');
+      console.error(err);
+      history.pop();
+    }
+
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }
+</script>
+
+</body>
+</html>
