@@ -334,7 +334,7 @@
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history })
+        body: JSON.stringify({ message: text, messages: JSON.stringify(history) })
       });
 
       removeTyping();
