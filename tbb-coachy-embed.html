@@ -252,7 +252,7 @@
 
 <script>
   // ── Configuration ──────────────────────────────────────────────
-  const WEBHOOK_URL = 'https://hook.eu2.make.com/qwqbls25wsp8i1b5bwvbr9ah0zucsiue';
+  const WEBHOOK_URL = 'https://hook.eu2.make.com/ja9pmqhut1awqprizvlh67wtxnpomeet';
   // ──────────────────────────────────────────────────────────────
 
   const messagesEl = document.getElementById('messages');
@@ -345,14 +345,23 @@
         throw new Error(`Status ${res.status}`);
       }
 
-      const data = await res.json();
-
-      const reply =
-        data.response ||
-        data.completion ||
-        data.content ||
-        data?.choices?.[0]?.message?.content ||
-        'No response received.';
+      const rawText = await res.text();
+      let reply = 'No response received.';
+      try {
+        const data = JSON.parse(rawText);
+        reply =
+          data.response ||
+          data.completion ||
+          data.content ||
+          (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ||
+          reply;
+      } catch (parseErr) {
+        // If JSON is malformed, try to extract the completion text directly
+        const match = rawText.match(/"(?:response|completion|content)"\s*:\s*"((?:[^"\\]|\\[\s\S])*)"/m);
+        if (match) reply = match[1].replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\"/g, '"');
+        else reply = rawText;
+        console.warn('JSON parse failed, used fallback:', parseErr);
+      }
 
       addMessage('assistant', reply);
       history.push({ role: 'assistant', content: reply });
