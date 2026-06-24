@@ -10,15 +10,22 @@
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: transparent;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
     padding: 0;
   }
 
-  .chat-container {
+  .page-wrap {
     width: 100%;
     max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ── Chat ── */
+
+  .chat-container {
+    width: 100%;
     height: 75vh;
     min-height: 480px;
     background: #ffffff;
@@ -27,7 +34,6 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    margin: 0 auto;
   }
 
   .chat-header {
@@ -188,7 +194,6 @@
   .send-button:hover  { background: #333; }
   .send-button:active { transform: scale(0.95); }
   .send-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-
   .send-button svg { width: 18px; height: 18px; fill: #fff; }
 
   .error-message {
@@ -215,44 +220,182 @@
     font-size: 15px;
     margin-bottom: 8px;
   }
+
+  /* ── Feedback & Topic panels ── */
+
+  .panel {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    padding: 20px 24px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .panel.visible { display: block; }
+
+  .panel-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 14px;
+  }
+
+  /* Stars */
+  .star-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .star {
+    font-size: 28px;
+    color: #e0dfd9;
+    cursor: pointer;
+    transition: color 0.15s, transform 0.1s;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .star:hover,
+  .star.active { color: #f5a623; }
+  .star:hover  { transform: scale(1.15); }
+
+  /* Shared textarea + input */
+  .panel-textarea,
+  .panel-text-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e0dfd9;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    color: #1a1a1a;
+    background: #fafaf8;
+    transition: border-color 0.2s;
+    margin-bottom: 12px;
+  }
+
+  .panel-textarea {
+    resize: none;
+    min-height: 72px;
+    line-height: 1.5;
+  }
+
+  .panel-text-input { height: 42px; }
+
+  .panel-textarea:focus,
+  .panel-text-input:focus { border-color: #1a1a1a; background: #fff; }
+
+  .panel-textarea::placeholder,
+  .panel-text-input::placeholder { color: #bbb; }
+
+  .panel-submit {
+    height: 38px;
+    padding: 0 20px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .panel-submit:hover  { background: #333; }
+  .panel-submit:active { transform: scale(0.97); }
+  .panel-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+  .panel-thanks {
+    font-size: 14px;
+    color: #2d6a4f;
+    font-weight: 500;
+    display: none;
+    padding: 4px 0;
+  }
 </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="chat-header">
-    <div class="chat-header-icon">📦</div>
-    <div class="chat-header-text">
-      <h2>The Bigger Box</h2>
-      <p>Your thinking partner</p>
+<div class="page-wrap">
+
+  <!-- Chat -->
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="chat-header-icon">📦</div>
+      <div class="chat-header-text">
+        <h2>The Bigger Box</h2>
+        <p>Your thinking partner</p>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="messages">
+      <div class="welcome-message">
+        <strong>Welcome.</strong>
+        What would you like to think through today?
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <textarea
+        class="chat-input"
+        id="userInput"
+        placeholder="Type your question…"
+        rows="1"
+      ></textarea>
+      <button class="send-button" id="sendBtn" title="Send">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <div class="chat-messages" id="messages">
-    <div class="welcome-message">
-      <strong>Welcome.</strong>
-      What would you like to think through today?
+  <!-- Feedback panel -->
+  <div class="panel" id="feedbackPanel">
+    <div class="panel-label">How was this conversation?</div>
+    <div class="star-row" id="starRow">
+      <span class="star" data-value="1">★</span>
+      <span class="star" data-value="2">★</span>
+      <span class="star" data-value="3">★</span>
+      <span class="star" data-value="4">★</span>
+      <span class="star" data-value="5">★</span>
     </div>
-  </div>
-
-  <div class="chat-input-area">
     <textarea
-      class="chat-input"
-      id="userInput"
-      placeholder="Type your question…"
-      rows="1"
+      class="panel-textarea"
+      id="feedbackComment"
+      placeholder="Anything you'd like to tell us? (optional)"
     ></textarea>
-    <button class="send-button" id="sendBtn" title="Send">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-      </svg>
-    </button>
+    <button class="panel-submit" id="feedbackSubmit">Send feedback</button>
+    <div class="panel-thanks" id="feedbackThanks">Thanks — that helps a lot. ✓</div>
   </div>
+
+  <!-- Topic suggestion panel -->
+  <div class="panel" id="topicPanel">
+    <div class="panel-label">Suggest a topic</div>
+    <input
+      type="text"
+      class="panel-text-input"
+      id="topicInput"
+      placeholder="What topic would you like to explore next?"
+    />
+    <button class="panel-submit" id="topicSubmit">Send suggestion</button>
+    <div class="panel-thanks" id="topicThanks">Received — we read every suggestion. ✓</div>
+  </div>
+
 </div>
 
 <script>
   // ── Configuration ──────────────────────────────────────────────
-  const WEBHOOK_URL = 'https://hook.eu2.make.com/ja9pmqhut1awqprizvlh67wtxnpomeet';
+  const CHAT_WEBHOOK     = 'https://hook.eu2.make.com/ja9pmqhut1awqprizvlh67wtxnpomeet';
+  const FEEDBACK_WEBHOOK = 'https://hook.eu2.make.com/4r84wqrmpyihtw6hehfgbbtx0hxs2tnf';
+  const TOPIC_WEBHOOK    = 'https://hook.eu2.make.com/eab7jaaqd9eqs8l5tbnxnnv8mw2oo4sy';
   // ──────────────────────────────────────────────────────────────
 
   const messagesEl = document.getElementById('messages');
@@ -260,6 +403,9 @@
   const sendBtn    = document.getElementById('sendBtn');
 
   let history = [];
+  let panelsShown = false;
+
+  // ── Chat ────────────────────────────────────────────────────────
 
   inputEl.addEventListener('input', () => {
     inputEl.style.height = 'auto';
@@ -314,6 +460,13 @@
     setTimeout(() => el.remove(), 6000);
   }
 
+  function revealPanels() {
+    if (panelsShown) return;
+    panelsShown = true;
+    document.getElementById('feedbackPanel').classList.add('visible');
+    document.getElementById('topicPanel').classList.add('visible');
+  }
+
   async function sendMessage() {
     const text = inputEl.value.trim();
     if (!text) return;
@@ -331,7 +484,7 @@
     showTyping();
 
     try {
-      const res = await fetch(WEBHOOK_URL, {
+      const res = await fetch(CHAT_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, messages: JSON.stringify(history) })
@@ -347,19 +500,18 @@
 
       const rawText = await res.text();
       let reply = 'No response received.';
-      // Try JSON first, fall back to plain text
       try {
         const data = JSON.parse(rawText);
         reply = data.response || data.completion || data.content
           || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
           || reply;
       } catch (e) {
-        // Plain text response
         if (rawText && rawText.trim()) reply = rawText.trim();
       }
 
       addMessage('assistant', reply);
       history.push({ role: 'assistant', content: reply });
+      revealPanels();
 
     } catch (err) {
       removeTyping();
@@ -371,6 +523,87 @@
     sendBtn.disabled = false;
     inputEl.focus();
   }
+
+  // ── Stars ────────────────────────────────────────────────────────
+
+  let selectedStars = 0;
+  const stars = document.querySelectorAll('.star');
+
+  stars.forEach(star => {
+    star.addEventListener('mouseover', () => highlightStars(+star.dataset.value));
+    star.addEventListener('mouseout',  () => highlightStars(selectedStars));
+    star.addEventListener('click', () => {
+      selectedStars = +star.dataset.value;
+      highlightStars(selectedStars);
+    });
+  });
+
+  function highlightStars(n) {
+    stars.forEach(s => s.classList.toggle('active', +s.dataset.value <= n));
+  }
+
+  // ── Feedback submit ──────────────────────────────────────────────
+
+  document.getElementById('feedbackSubmit').addEventListener('click', async () => {
+    const btn     = document.getElementById('feedbackSubmit');
+    const thanks  = document.getElementById('feedbackThanks');
+    const comment = document.getElementById('feedbackComment').value.trim();
+
+    if (!selectedStars) { highlightStars(0); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      await fetch(FEEDBACK_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stars: selectedStars,
+          comment: comment || '',
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (e) {
+      console.error('Feedback send failed:', e);
+    }
+
+    document.getElementById('feedbackComment').style.display = 'none';
+    document.getElementById('starRow').style.display = 'none';
+    btn.style.display = 'none';
+    thanks.style.display = 'block';
+  });
+
+  // ── Topic submit ─────────────────────────────────────────────────
+
+  document.getElementById('topicSubmit').addEventListener('click', async () => {
+    const btn       = document.getElementById('topicSubmit');
+    const thanks    = document.getElementById('topicThanks');
+    const inputField = document.getElementById('topicInput');
+    const suggestion = inputField.value.trim();
+
+    if (!suggestion) { inputField.focus(); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      await fetch(TOPIC_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          suggestion: suggestion,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (e) {
+      console.error('Topic send failed:', e);
+    }
+
+    inputField.style.display = 'none';
+    btn.style.display = 'none';
+    thanks.style.display = 'block';
+  });
 </script>
 
 </body>
