@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Bigger Box</title>
-<!-- Markdown parser -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -36,6 +34,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
   }
 
   .chat-header {
@@ -107,84 +106,19 @@
     font-size: 14px;
     line-height: 1.65;
     color: #1a1a1a;
+    white-space: pre-wrap;
     word-break: break-word;
   }
 
-  /* User bubble stays plain text */
   .message.user .message-bubble {
     background: #1a1a1a;
     color: #ffffff;
     border-bottom-right-radius: 4px;
-    white-space: pre-wrap;
   }
 
-  /* Assistant bubble renders markdown */
   .message.assistant .message-bubble {
     background: #f5f5f3;
     border-bottom-left-radius: 4px;
-  }
-
-  /* Markdown element styles inside assistant bubble */
-  .message.assistant .message-bubble p {
-    margin-bottom: 0.6em;
-  }
-  .message.assistant .message-bubble p:last-child {
-    margin-bottom: 0;
-  }
-  .message.assistant .message-bubble strong {
-    font-weight: 600;
-    color: #111;
-  }
-  .message.assistant .message-bubble em {
-    font-style: italic;
-  }
-  .message.assistant .message-bubble h1,
-  .message.assistant .message-bubble h2,
-  .message.assistant .message-bubble h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: #111;
-    margin: 0.8em 0 0.3em;
-  }
-  .message.assistant .message-bubble h1:first-child,
-  .message.assistant .message-bubble h2:first-child,
-  .message.assistant .message-bubble h3:first-child {
-    margin-top: 0;
-  }
-  .message.assistant .message-bubble ul,
-  .message.assistant .message-bubble ol {
-    padding-left: 1.4em;
-    margin: 0.4em 0 0.6em;
-  }
-  .message.assistant .message-bubble li {
-    margin-bottom: 0.25em;
-  }
-  .message.assistant .message-bubble li:last-child {
-    margin-bottom: 0;
-  }
-  .message.assistant .message-bubble code {
-    background: #e8e8e4;
-    border-radius: 4px;
-    padding: 1px 5px;
-    font-size: 13px;
-    font-family: ui-monospace, monospace;
-  }
-  .message.assistant .message-bubble pre {
-    background: #e8e8e4;
-    border-radius: 8px;
-    padding: 10px 12px;
-    overflow-x: auto;
-    margin: 0.5em 0;
-  }
-  .message.assistant .message-bubble pre code {
-    background: none;
-    padding: 0;
-  }
-  .message.assistant .message-bubble blockquote {
-    border-left: 3px solid #ccc;
-    padding-left: 12px;
-    color: #666;
-    margin: 0.5em 0;
   }
 
   .typing-indicator {
@@ -290,17 +224,49 @@
 
   /* ── Feedback & Topic panels ── */
 
-  .panel {
-    width: 100%;
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-    padding: 20px 24px;
+  .panels-bar {
     display: none;
-    animation: fadeIn 0.3s ease;
+    position: absolute;
+    bottom: 71px; /* sits just above the input area */
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(4px);
+    border-top: 1px solid #eeede9;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.08);
+    z-index: 10;
+    animation: slideUp 0.3s ease;
   }
 
-  .panel.visible { display: block; }
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .panels-bar.visible { display: flex; }
+
+  .panels-dismiss {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #bbb;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+  }
+  .panels-dismiss:hover { color: #666; }
+
+  .panel {
+    flex: 1;
+    padding: 14px 20px;
+  }
+
+  .panel + .panel {
+    border-left: 1px solid #eeede9;
+  }
 
   .panel-label {
     font-size: 11px;
@@ -409,6 +375,43 @@
       </div>
     </div>
 
+    <div class="panels-bar" id="panelsBar">
+      <button class="panels-dismiss" id="panelsDismiss" title="Close">×</button>
+
+      <!-- Feedback panel -->
+      <div class="panel" id="feedbackPanel">
+        <div class="panel-label">How was this conversation?</div>
+        <div class="star-row" id="starRow">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+        <textarea
+          class="panel-textarea"
+          id="feedbackComment"
+          placeholder="Anything you'd like to tell us? (optional)"
+        ></textarea>
+        <button class="panel-submit" id="feedbackSubmit">Send feedback</button>
+        <div class="panel-thanks" id="feedbackThanks">Thanks — that helps a lot. ✓</div>
+      </div>
+
+      <!-- Topic suggestion panel -->
+      <div class="panel" id="topicPanel">
+        <div class="panel-label">Suggest a topic</div>
+        <input
+          type="text"
+          class="panel-text-input"
+          id="topicInput"
+          placeholder="What topic would you like to explore next?"
+        />
+        <button class="panel-submit" id="topicSubmit">Send suggestion</button>
+        <div class="panel-thanks" id="topicThanks">Received — we read every suggestion. ✓</div>
+      </div>
+
+    </div>
+
     <div class="chat-input-area">
       <textarea
         class="chat-input"
@@ -424,38 +427,6 @@
     </div>
   </div>
 
-  <!-- Feedback panel -->
-  <div class="panel" id="feedbackPanel">
-    <div class="panel-label">How was this conversation?</div>
-    <div class="star-row" id="starRow">
-      <span class="star" data-value="1">★</span>
-      <span class="star" data-value="2">★</span>
-      <span class="star" data-value="3">★</span>
-      <span class="star" data-value="4">★</span>
-      <span class="star" data-value="5">★</span>
-    </div>
-    <textarea
-      class="panel-textarea"
-      id="feedbackComment"
-      placeholder="Anything you'd like to tell us? (optional)"
-    ></textarea>
-    <button class="panel-submit" id="feedbackSubmit">Send feedback</button>
-    <div class="panel-thanks" id="feedbackThanks">Thanks — that helps a lot. ✓</div>
-  </div>
-
-  <!-- Topic suggestion panel -->
-  <div class="panel" id="topicPanel">
-    <div class="panel-label">Suggest a topic</div>
-    <input
-      type="text"
-      class="panel-text-input"
-      id="topicInput"
-      placeholder="What topic would you like to explore next?"
-    />
-    <button class="panel-submit" id="topicSubmit">Send suggestion</button>
-    <div class="panel-thanks" id="topicThanks">Received — we read every suggestion. ✓</div>
-  </div>
-
 </div>
 
 <script>
@@ -465,15 +436,13 @@
   const TOPIC_WEBHOOK    = 'https://hook.eu2.make.com/eab7jaaqd9eqs8l5tbnxnnv8mw2oo4sy';
   // ──────────────────────────────────────────────────────────────
 
-  // Configure marked: safe defaults, breaks on newlines
-  marked.setOptions({ breaks: true, gfm: true });
-
   const messagesEl = document.getElementById('messages');
   const inputEl    = document.getElementById('userInput');
   const sendBtn    = document.getElementById('sendBtn');
 
   let history = [];
   let panelsShown = false;
+  let turnCount = 0;
 
   // ── Chat ────────────────────────────────────────────────────────
 
@@ -500,15 +469,7 @@
     wrapper.className = `message ${role}`;
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
-
-    if (role === 'assistant') {
-      // Render markdown for assistant messages
-      bubble.innerHTML = marked.parse(text);
-    } else {
-      // Plain text for user messages
-      bubble.textContent = text;
-    }
-
+    bubble.textContent = text;
     wrapper.appendChild(bubble);
     messagesEl.appendChild(wrapper);
     scrollToBottom();
@@ -541,9 +502,12 @@
   function revealPanels() {
     if (panelsShown) return;
     panelsShown = true;
-    document.getElementById('feedbackPanel').classList.add('visible');
-    document.getElementById('topicPanel').classList.add('visible');
+    document.getElementById('panelsBar').classList.add('visible');
   }
+
+  document.getElementById('panelsDismiss').addEventListener('click', () => {
+    document.getElementById('panelsBar').classList.remove('visible');
+  });
 
   async function sendMessage() {
     const text = inputEl.value.trim();
@@ -565,7 +529,7 @@
       const res = await fetch(CHAT_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, messages: JSON.stringify(history) })
+        body: JSON.stringify({ messages: JSON.stringify(history) })
       });
 
       removeTyping();
@@ -576,20 +540,12 @@
         throw new Error(`Status ${res.status}`);
       }
 
-      const rawText = await res.text();
-      let reply = 'No response received.';
-      try {
-        const data = JSON.parse(rawText);
-        reply = data.response || data.completion || data.content
-          || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
-          || reply;
-      } catch (e) {
-        if (rawText && rawText.trim()) reply = rawText.trim();
-      }
+      const reply = (await res.text()).trim() || 'No response received.';
 
       addMessage('assistant', reply);
       history.push({ role: 'assistant', content: reply });
-      revealPanels();
+      turnCount++;
+      if (turnCount >= 10) revealPanels();
 
     } catch (err) {
       removeTyping();
