@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bigger Box</title>
+<style>
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f7f6f2;
+  color: #1a1a1a;
+}
+
+/* ── App shell ──────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px;
+  gap: 10px;
+}
+
+/* ── Video panel ────────────────────────────────────────────────────── */
+
+.video-panel {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #eeede9;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.video-bar {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.video-panel.video-open .video-bar {
+  border-bottom: 1px solid #eeede9;
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.brand-dot {
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, #f5a623, #e8761a);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.brand-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bar-sep {
+  width: 1px;
+  height: 18px;
+  background: #e5e4df;
+  flex-shrink: 0;
+}
+
+/* Recent lesson tabs (0–2) */
+.tabs-bar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+}
+
+.tab {
+  padding: 5px 11px;
+  border-radius: 7px;
+  border: 1px solid #eeede9;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.tab:hover  { border-color: #bbb; color: #444; }
+.tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+/* Map button */
+.map-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid #e0dfd9;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.map-btn:hover { border-color: #f5a623; color: #e8761a; background: #fffbf4; }
+
+.map-btn svg { width: 13px; height: 13px; }
+
+/* Spacer pushes chevron to the right */
+.bar-spacer { flex: 1; }
+
+/* Video toggle chevron */
+.video-toggle-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.video-toggle-btn:hover { background: #f5f5f3; color: #555; }
+
+.video-toggle-btn svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.25s ease;
+}
+
+.video-panel.video-open .video-toggle-btn svg {
+  transform: rotate(180deg);
+}
+
+/* ── Video content (collapsible) ─────────────────────────────────────── */
+
+.video-content-outer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.video-panel.video-open .video-content-outer {
+  grid-template-rows: 1fr;
+}
+
+.video-content-inner { min-height: 0; overflow: hidden; }
+
+.video-content { padding: 14px 14px 16px; }
+
+.video-aspect {
+  width: 100%;
+  padding-top: 56.25%;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+}
+
+.video-aspect iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: 0;
+}
+
+.lesson-desc {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.55;
+  margin-top: 10px;
+}
+
+/* ── Chat section ───────────────────────────────────────────────────── */
+
+.chat-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.chat-section.panels-hidden .panel.visible { display: none; }
+
+.chat-container {
+  flex: 1;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #eeede9;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.chat-container.chat-minimized { flex: 0 0 auto; }
+
+/* ── Chat header ────────────────────────────────────────────────────── */
+
+.chat-header {
+  height: 54px;
+  padding: 0 14px;
+  border-bottom: 1px solid #eeede9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.chat-container.chat-minimized .chat-header {
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.chat-header-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #f5a623, #e8761a);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.chat-header-text     { flex: 1; min-width: 0; }
+.chat-header-text h3  { font-size: 13px; font-weight: 600; }
+.chat-header-text p   { font-size: 11px; color: #888; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.chat-min-btn {
+  width: 26px; height: 26px;
+  border: none; background: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #bbb;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.chat-min-btn:hover { background: #f5f5f3; color: #555; }
+
+.chat-min-btn svg {
+  width: 14px; height: 14px;
+  transition: transform 0.25s ease;
+}
+
+.chat-container.chat-minimized .chat-min-btn svg { transform: rotate(180deg); }
+
+/* ── Chat body ──────────────────────────────────────────────────────── */
+
+.chat-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-container.chat-minimized .chat-body { display: none; }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar { width: 3px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+.message {
+  display: flex;
+  flex-direction: column;
+  max-width: 86%;
+  animation: msgIn 0.2s ease;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.message.user      { align-self: flex-end;   align-items: flex-end; }
+.message.assistant { align-self: flex-start; align-items: flex-start; }
+
+.message-bubble {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message.user .message-bubble {
+  background: #1a1a1a; color: #fff;
+  border-bottom-right-radius: 3px;
+}
+
+.message.assistant .message-bubble {
+  background: #f5f5f3; color: #1a1a1a;
+  border-bottom-left-radius: 3px;
+}
+
+.typing-indicator {
+  display: flex; align-items: center; gap: 4px;
+  padding: 12px 14px;
+  background: #f5f5f3;
+  border-radius: 14px;
+  border-bottom-left-radius: 3px;
+}
+
+.typing-indicator span {
+  width: 5px; height: 5px;
+  background: #aaa; border-radius: 50%;
+  animation: tdot 1.2s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes tdot {
+  0%,60%,100% { transform: translateY(0); }
+  30%          { transform: translateY(-4px); }
+}
+
+.chat-input-area {
+  padding: 10px 14px;
+  border-top: 1px solid #eeede9;
+  display: flex; gap: 8px; align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid #e0dfd9;
+  border-radius: 10px;
+  font-size: 13px; font-family: inherit;
+  resize: none; outline: none;
+  min-height: 38px; max-height: 100px;
+  line-height: 1.5;
+  background: #fafaf8; color: #1a1a1a;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus        { border-color: #1a1a1a; background: #fff; }
+.chat-input::placeholder { color: #bbb; }
+
+.send-button {
+  width: 38px; height: 38px;
+  background: #1a1a1a; border: none; border-radius: 10px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.send-button:hover    { background: #333; }
+.send-button:disabled { background: #ccc; cursor: not-allowed; }
+.send-button svg      { width: 16px; height: 16px; fill: #fff; }
+
+.welcome-message {
+  align-self: center;
+  text-align: center;
+  color: #999; font-size: 13px;
+  padding: 24px 0;
+  max-width: 260px;
+}
+
+.welcome-message strong {
+  display: block;
+  color: #555; font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.error-message {
+  align-self: center;
+  font-size: 12px; color: #c0392b;
+  background: #fdf0ef;
+  padding: 7px 12px; border-radius: 8px;
+}
+
+/* ── Panels ─────────────────────────────────────────────────────────── */
+
+.panel {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eeede9;
+  padding: 16px 18px;
+  display: none;
+  flex-shrink: 0;
+}
+
+.panel.visible { display: block; }
+
+.panel-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  color: #aaa; margin-bottom: 12px;
+}
+
+.star-row { display: flex; gap: 5px; margin-bottom: 12px; }
+
+.star {
+  font-size: 24px; color: #e0dfd9;
+  cursor: pointer; transition: color 0.12s;
+  user-select: none;
+}
+
+.star:hover, .star.active { color: #f5a623; }
+
+.panel-textarea, .panel-text-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e0dfd9; border-radius: 10px;
+  font-size: 13px; font-family: inherit;
+  outline: none; color: #1a1a1a; background: #fafaf8;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+
+.panel-textarea       { resize: none; min-height: 60px; line-height: 1.5; }
+.panel-text-input     { height: 38px; }
+.panel-textarea:focus,
+.panel-text-input:focus { border-color: #1a1a1a; background: #fff; }
+.panel-textarea::placeholder,
+.panel-text-input::placeholder { color: #bbb; }
+
+.panel-submit {
+  height: 34px; padding: 0 16px;
+  background: #1a1a1a; color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 500; font-family: inherit;
+  cursor: pointer; transition: background 0.15s;
+}
+
+.panel-submit:hover    { background: #333; }
+.panel-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+.panel-thanks {
+  font-size: 13px; color: #2d6a4f;
+  font-weight: 500; display: none; padding: 3px 0;
+}
+
+/* ── Map modal ──────────────────────────────────────────────────────── */
+
+.map-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.map-modal.open { display: flex; }
+
+.map-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 18, 14, 0.55);
+  backdrop-filter: blur(3px);
+  animation: bdFade 0.2s ease;
+}
+
+@keyframes bdFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.map-card {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 22px 20px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+  animation: cardPop 0.22s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+@keyframes cardPop {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.map-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.map-card-title {
+  flex: 1;
+  font-size: 14px; font-weight: 600;
+}
+
+.map-close-btn {
+  width: 26px; height: 26px;
+  border: none; background: none; cursor: pointer;
+  color: #bbb; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.map-close-btn:hover { background: #f5f5f3; color: #555; }
+
+/* Map cross-section view — SVG triangle + chip overlay */
+.map-view-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 92%;    /* 460/500 aspect ratio */
+}
+
+.map-view-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+
+.map-view-svg text {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.map-chips-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Topic chips — absolutely positioned over SVG */
+.map-topic-chip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.95);
+  border: 1.5px solid #e0dfd9;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11px; font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  font-family: inherit;
+  pointer-events: auto;
+  user-select: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.map-topic-chip:hover:not(.coming-soon) {
+  border-color: #1a1a1a;
+  color: #1a1a1a;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  z-index: 1;
+}
+
+.map-topic-chip.active {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #fff;
+}
+
+.map-topic-chip.coming-soon {
+  opacity: 0.30;
+  cursor: default;
+}
+
+/* Layer nav — segmented control */
+.map-layer-nav {
+  display: flex;
+  margin-top: 14px;
+  border: 1.5px solid #e0dfd9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.map-layer-btn {
+  flex: 1;
+  height: 34px;
+  border: none;
+  border-right: 1.5px solid #e0dfd9;
+  background: transparent;
+  font-size: 12px; font-weight: 500;
+  font-family: inherit;
+  color: #aaa;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.map-layer-btn:last-child { border-right: none; }
+.map-layer-btn:hover:not(.active) { background: #f7f6f2; color: #555; }
+.map-layer-btn.active { background: #1a1a1a; color: #fff; }
+
+/* ── Mobile ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 660px) {
+  .app          { padding: 10px; gap: 8px; }
+  .brand-name   { display: none; }
+  .bar-sep      { display: none; }
+  .video-bar    { padding: 0 12px; }
+  .video-content { padding: 10px 12px 14px; }
+  .chat-messages { padding: 14px; }
+  .chat-input-area { padding: 8px 12px; }
+  .map-card     { padding: 16px 16px 20px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Video panel ─────────────────────────────────────────────── -->
+  <div class="video-panel video-open" id="videoPanel">
+
+    <div class="video-bar">
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-dot">📦</div>
+        <span class="brand-name">The Bigger Box</span>
+      </div>
+      <div class="bar-sep"></div>
+
+      <!-- Recent lesson tabs (0–2, populated by JS) -->
+      <div class="tabs-bar" id="tabsBar"></div>
+
+      <!-- Map button -->
+      <button class="map-btn" id="mapBtn" title="Open topic map">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+          <line x1="9" y1="3" x2="9" y2="18"></line>
+          <line x1="15" y1="6" x2="15" y2="21"></line>
+        </svg>
+        Map
+      </button>
+
+      <div class="bar-spacer"></div>
+
+      <!-- Video toggle chevron -->
+      <button class="video-toggle-btn" id="videoToggleBtn" title="Toggle video">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Collapsible video content -->
+    <div class="video-content-outer">
+      <div class="video-content-inner">
+        <div class="video-content">
+          <div class="video-aspect">
+            <iframe id="videoFrame"
+              src=""
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
+          <p class="lesson-desc" id="lessonDesc"></p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /video-panel -->
+
+  <!-- ── Chat section ────────────────────────────────────────────── -->
+  <div class="chat-section" id="chatSection">
+
+    <div class="chat-container" id="chatContainer">
+      <div class="chat-header" id="chatHeader">
+        <div class="chat-header-icon">📦</div>
+        <div class="chat-header-text">
+          <h3>The Bigger Box</h3>
+          <p id="chatContext">Your thinking partner</p>
+        </div>
+        <button class="chat-min-btn" id="chatMinBtn" title="Minimise chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <div class="chat-body">
+        <div class="chat-messages" id="messages">
+          <div class="welcome-message">
+            <strong>Welcome.</strong>
+            What would you like to think through today?
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="userInput" placeholder="Type your question…" rows="1"></textarea>
+          <button class="send-button" id="sendBtn">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback panel -->
+    <div class="panel" id="feedbackPanel">
+      <div class="panel-label">How was this conversation?</div>
+      <div class="star-row" id="starRow">
+        <span class="star" data-value="1">★</span>
+        <span class="star" data-value="2">★</span>
+        <span class="star" data-value="3">★</span>
+        <span class="star" data-value="4">★</span>
+        <span class="star" data-value="5">★</span>
+      </div>
+      <textarea class="panel-textarea" id="feedbackComment" placeholder="Anything you'd like to tell us? (optional)"></textarea>
+      <button class="panel-submit" id="feedbackSubmit">Send feedback</button>
+      <div class="panel-thanks" id="feedbackThanks">Thanks — that helps a lot. ✓</div>
+    </div>
+
+    <!-- Topic suggestion panel -->
+    <div class="panel" id="topicPanel">
+      <div class="panel-label">Suggest a topic</div>
+      <input type="text" class="panel-text-input" id="topicInput" placeholder="What topic would you like to explore next?" />
+      <button class="panel-submit" id="topicSubmit">Send suggestion</button>
+      <div class="panel-thanks" id="topicThanks">Received — we read every suggestion. ✓</div>
+    </div>
+
+  </div><!-- /chat-section -->
+
+</div><!-- /app -->
+
+<!-- ── Map modal (outside .app so it can be full-screen) ─────────── -->
+<div class="map-modal" id="mapModal" role="dialog" aria-label="TBB topic map">
+  <div class="map-backdrop" id="mapBackdrop"></div>
+  <div class="map-card">
+    <div class="map-card-header">
+      <span class="map-card-title">TBB Topics</span>
+      <button class="map-close-btn" id="mapCloseBtn" aria-label="Close map">✕</button>
+    </div>
+    <!-- SVG cross-section view + chip overlay -->
+    <div class="map-view-wrap">
+      <svg class="map-view-svg" id="mapSvg" viewBox="0 0 500 460" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="map-chips-overlay" id="mapChipsOverlay"></div>
+    </div>
+    <!-- Layer navigation — 3 cross-sections of the pyramid -->
+    <div class="map-layer-nav" id="mapLayerNav">
+      <button class="map-layer-btn active" data-layer="operational">Operational</button>
+      <button class="map-layer-btn"        data-layer="coordination">Coordination</button>
+      <button class="map-layer-btn"        data-layer="strategic">Strategic</button>
+    </div>
+  </div><!-- /map-card -->
+</div><!-- /map-modal -->
+
+<script>
+  // ── Configuration ────────────────────────────────────────────────────
+  //
+  // Each lesson:
+  //   id        — unique key
+  //   title     — display name
+  //   desc      — one-line description shown below the video
+  //   vimeoId   — Vimeo video ID (replace placeholders when videos are ready)
+  //   mapX/mapY — position inside the triangle as % of bounding box
+  //               (0,0) = top-left corner of bounding box
+  //               triangle vertices: top=(50%,6%), bl=(6%,96%), br=(94%,96%)
+  //   comingSoon— if true, chip is visible but not clickable
+  //
+  // To add a future topic: add an entry with comingSoon: true.
+  // To remove a tab from the bar while keeping it on the map: set barVisible: false.
+
+  const LESSONS = [
+
+    // ── Available now ──────────────────────────────────────────────
+    // level: 0 = base/specific, 1 = apex/generic
+    {
+      id:      'business-agility',
+      title:   'Business Agility',
+      desc:    'How organisations adapt and respond in complex, fast-changing environments.',
+      vimeoId: '1083285043',
+      mapX: 46, mapY: 30, level: 0.60
+    },
+    {
+      id:      'strategy',
+      title:   'Strategy',
+      desc:    'Replace vimeoId with your video once uploaded.',
+      vimeoId: '1083285043',
+      mapX: 65, mapY: 48, level: 0.55
+    },
+    {
+      id:      'workshop-design',
+      title:   'Workshop Design',
+      desc:    'Replace vimeoId with your video once uploaded.',
+      vimeoId: '1083285043',
+      mapX: 31, mapY: 68, level: 0.35
+    },
+    {
+      id:      'mental-models',
+      title:   'Mental Models',
+      desc:    'Replace vimeoId with your video once uploaded.',
+      vimeoId: '1083285043',
+      mapX: 23, mapY: 60, level: 0.65
+    },
+
+    // ── L1/L2 curriculum topics — coming soon ──────────────────────
+    // Remove comingSoon: true and add vimeoId when the video is ready.
+    {
+      id:         'okrs',
+      title:      'OKRs',
+      desc:       'How organisations set and connect goals across levels.',
+      comingSoon: true,
+      mapX: 64, mapY: 62, level: 0.35
+    },
+    {
+      id:         'kanban-and-flow',
+      title:      'Kanban and Flow',
+      desc:       'Managing work in progress and making flow visible.',
+      comingSoon: true,
+      mapX: 70, mapY: 70, level: 0.20
+    },
+    {
+      id:         'refinement',
+      title:      'Refinement',
+      desc:       'Preparing work so teams can execute with clarity.',
+      comingSoon: true,
+      mapX: 54, mapY: 74, level: 0.15
+    },
+    {
+      id:         'flight-levels',
+      title:      'Flight Levels',
+      desc:       'Coordination across team, portfolio, and strategy levels.',
+      comingSoon: true,
+      mapX: 69, mapY: 53, level: 0.42
+    },
+    {
+      id:         'stakeholders',
+      title:      'Stakeholders',
+      desc:       'Mapping and engaging the people who shape and are shaped by your work.',
+      comingSoon: true,
+      mapX: 57, mapY: 37, level: 0.48
+    },
+    {
+      id:         'key-success-factors',
+      title:      'Key Success Factors',
+      desc:       'The unique capabilities that give an organisation its competitive edge.',
+      comingSoon: true,
+      mapX: 63, mapY: 43, level: 0.52
+    },
+    {
+      id:         'change-and-leadership',
+      title:      'Change and Leadership',
+      desc:       'How leaders create the conditions for lasting change.',
+      comingSoon: true,
+      mapX: 44, mapY: 56, level: 0.50
+    },
+    {
+      id:         'organisational-culture',
+      title:      'Organisational Culture',
+      desc:       'The assumptions and behaviours that shape what is possible.',
+      comingSoon: true,
+      mapX: 61, mapY: 78, level: 0.45
+    },
+
+    // ── Foundation topics — coming soon ────────────────────────────
+    {
+      id:         'agile-principles',
+      title:      'Agile Principles',
+      desc:       'The values and principles behind agile ways of working.',
+      comingSoon: true,
+      mapX: 40, mapY: 76, level: 0.38
+    },
+    {
+      id:         'project-management',
+      title:      'Project Management',
+      desc:       'Structuring and delivering complex work.',
+      comingSoon: true,
+      mapX: 74, mapY: 80, level: 0.22
+    },
+    {
+      id:         'ai-operating-mode',
+      title:      'AI as a New Operating Mode',
+      desc:       'How AI is reshaping how organisations think and act.',
+      comingSoon: true,
+      mapX: 55, mapY: 22, level: 0.72
+    }
+
+  ];
+
+  const CHAT_WEBHOOK     = 'https://hook.eu2.make.com/ja9pmqhut1awqprizvlh67wtxnpomeet';
+  const FEEDBACK_WEBHOOK = 'https://hook.eu2.make.com/4r84wqrmpyihtw6hehfgbbtx0hxs2tnf';
+  const TOPIC_WEBHOOK    = 'https://hook.eu2.make.com/eab7jaaqd9eqs8l5tbnxnnv8mw2oo4sy';
+  // ─────────────────────────────────────────────────────────────────────
+
+  let currentLesson = LESSONS[0];
+  let recentLessons = [];      // up to 2, most-recent first
+  let history       = [];
+  let panelsShown   = false;
+  let videoOpen     = true;
+  let chatMin       = false;
+
+  // ── Lesson tabs (recent, max 2) ───────────────────────────────────────
+
+  const tabsBarEl = document.getElementById('tabsBar');
+
+  function addToRecents(lesson) {
+    recentLessons = recentLessons.filter(l => l.id !== lesson.id);
+    recentLessons.unshift(lesson);
+    if (recentLessons.length > 2) recentLessons.pop();
+    renderTabs();
+  }
+
+  function renderTabs() {
+    tabsBarEl.innerHTML = '';
+    recentLessons.forEach(lesson => {
+      const btn = document.createElement('button');
+      btn.className = 'tab' + (lesson.id === currentLesson.id ? ' active' : '');
+      btn.textContent = lesson.title;
+      btn.addEventListener('click', e => { e.stopPropagation(); switchLesson(lesson); });
+      tabsBarEl.appendChild(btn);
+    });
+  }
+
+  // ── Switch lesson ─────────────────────────────────────────────────────
+
+  function switchLesson(lesson, fromMap = false) {
+    currentLesson = lesson;
+    document.getElementById('videoFrame').src =
+      `https://player.vimeo.com/video/${lesson.vimeoId}?title=0&byline=0&portrait=0&dnt=1`;
+    document.getElementById('lessonDesc').textContent  = lesson.desc;
+    document.getElementById('chatContext').textContent = lesson.title;
+    addToRecents(lesson);
+    if (fromMap) closeMap();
+  }
+
+  // Initialise with first lesson
+  switchLesson(LESSONS[0]);
+
+  // ── Map modal — layer navigation ──────────────────────────────────────
+  //
+  // The map shows a top-down view of a pyramid — three horizontal cross-sections.
+  // Each cross-section is a triangle: big at the base (specific/operational),
+  // small near the apex (generic/strategic). The apex in top-down view is a point
+  // at the triangle centroid, shown as a small TBB-orange dot.
+  //
+  // Layers:
+  //   Operational  (level 0–0.39)  → scale 1.00 (full base triangle)
+  //   Coordination (level 0.39–0.59) → scale 0.54 (mid cross-section)
+  //   Strategic    (level 0.59+)   → scale 0.26 (near the apex)
+
+  const mapModal = document.getElementById('mapModal');
+
+  // SVG viewBox is 0 0 500 460
+  // Base triangle vertices (operational layer, scale 1.0)
+  const TRI_E  = { x: 250, y: 38  };   // Environment (top)
+  const TRI_P  = { x: 30,  y: 422 };   // People (bottom-left)
+  const TRI_O  = { x: 470, y: 422 };   // Organisations (bottom-right)
+  // Centroid = top-down view of the pyramid apex
+  const TRI_CX = (TRI_E.x + TRI_P.x + TRI_O.x) / 3;  // 250
+  const TRI_CY = (TRI_E.y + TRI_P.y + TRI_O.y) / 3;  // 294
+
+  // Three cross-section layers
+  const MAP_LAYERS = [
+    { id: 'operational',  label: 'Operational',  scale: 1.00, levelMin: 0,    levelMax: 0.39 },
+    { id: 'coordination', label: 'Coordination', scale: 0.80, levelMin: 0.39, levelMax: 0.59 },
+    { id: 'strategic',    label: 'Strategic',    scale: 0.60, levelMin: 0.59, levelMax: 1.01 },
+  ];
+
+  let activeMapLayer = MAP_LAYERS[0];
+
+  // Return scaled triangle vertices for a given scale factor (scaled from centroid)
+  function scaledVerts(scale) {
+    const lerp = (a, b, t) => a + t * (b - a);
+    return {
+      E: { x: lerp(TRI_CX, TRI_E.x, scale), y: lerp(TRI_CY, TRI_E.y, scale) },
+      P: { x: lerp(TRI_CX, TRI_P.x, scale), y: lerp(TRI_CY, TRI_P.y, scale) },
+      O: { x: lerp(TRI_CX, TRI_O.x, scale), y: lerp(TRI_CY, TRI_O.y, scale) },
+    };
+  }
+
+  // Convert mapX/mapY bounding-box % to barycentric coords of the reference 2D triangle
+  // Reference vertices: E=(50,6) P=(6,96) O=(94,96)
+  function toBary(px, py) {
+    const Ex=50, Ey=6, Px=6, Py=96, Ox=94, Oy=96;
+    const denom = (Py-Oy)*(Ex-Ox) + (Ox-Px)*(Ey-Oy);
+    const a = ((Py-Oy)*(px-Ox) + (Ox-Px)*(py-Oy)) / denom;
+    const b = ((Oy-Ey)*(px-Ox) + (Ex-Ox)*(py-Oy)) / denom;
+    return [a, b, 1 - a - b];
+  }
+
+  // Get the SVG position of a topic within the given scaled triangle
+  function topicSvgPos(lesson, verts) {
+    const [a, b, c] = toBary(lesson.mapX, lesson.mapY);
+    return {
+      x: a * verts.E.x + b * verts.P.x + c * verts.O.x,
+      y: a * verts.E.y + b * verts.P.y + c * verts.O.y,
+    };
+  }
+
+  function renderMap() {
+    const svg     = document.getElementById('mapSvg');
+    const overlay = document.getElementById('mapChipsOverlay');
+    if (!svg || !overlay) return;
+
+    const activeVerts = scaledVerts(activeMapLayer.scale);
+
+    // Helper: polygon points string for a layer
+    const triPts = (scale) => {
+      const v = scaledVerts(scale);
+      return `${v.E.x},${v.E.y} ${v.P.x},${v.P.y} ${v.O.x},${v.O.y}`;
+    };
+
+    // Build SVG: context triangles (faint) + active triangle + apex dot + vertex labels
+    const activeIsOp = activeMapLayer.id === 'operational';  // label adjustments
+
+    svg.innerHTML = `
+      <!-- Context outlines for the other two layers -->
+      ${MAP_LAYERS
+        .filter(l => l.id !== activeMapLayer.id)
+        .map(l => `<polygon
+          points="${triPts(l.scale)}"
+          fill="none"
+          stroke="#ebe9e3"
+          stroke-width="1"
+          stroke-linejoin="round"
+          stroke-dasharray="4 3"
+        />`)
+        .join('')}
+
+      <!-- Active layer triangle -->
+      <polygon
+        points="${triPts(activeMapLayer.scale)}"
+        fill="#faf8f4"
+        stroke="#ccc9c0"
+        stroke-width="1.5"
+        stroke-linejoin="round"
+      />
+
+      <!-- Apex dot — top-down view of pyramid tip (always at centroid) -->
+      <circle cx="${TRI_CX}" cy="${TRI_CY}" r="4" fill="#f5a623" opacity="0.55"/>
+
+      <!-- Vertex labels for the active triangle -->
+      <text
+        x="${activeVerts.E.x}" y="${activeVerts.E.y - 10}"
+        text-anchor="middle" fill="#c0bebb"
+        font-size="9" font-weight="700" letter-spacing="0.6"
+      >ENVIRONMENT</text>
+      <text
+        x="${activeVerts.P.x}" y="${activeVerts.P.y + 16}"
+        text-anchor="${activeIsOp ? 'start' : 'middle'}" fill="#c0bebb"
+        font-size="9" font-weight="700" letter-spacing="0.6"
+      >PEOPLE</text>
+      <text
+        x="${activeVerts.O.x}" y="${activeVerts.O.y + 16}"
+        text-anchor="${activeIsOp ? 'end' : 'middle'}" fill="#c0bebb"
+        font-size="9" font-weight="700" letter-spacing="0.6"
+      >ORGANISATIONS</text>
+    `;
+
+    // Build topic chips
+    overlay.innerHTML = '';
+    const layerTopics = LESSONS.filter(l => {
+      const lv = l.level || 0;
+      return lv >= activeMapLayer.levelMin && lv < activeMapLayer.levelMax;
+    });
+
+    layerTopics.forEach(lesson => {
+      const pos = topicSvgPos(lesson, activeVerts);
+      // Convert SVG coordinates to % of the overlay container
+      const leftPct = (pos.x / 500) * 100;
+      const topPct  = (pos.y / 460) * 100;
+
+      const el = document.createElement(lesson.comingSoon ? 'div' : 'button');
+      el.className = 'map-topic-chip' +
+        (lesson.comingSoon ? ' coming-soon' : '') +
+        (lesson.id === currentLesson.id ? ' active' : '');
+      el.textContent = lesson.title;
+      el.style.left  = leftPct + '%';
+      el.style.top   = topPct  + '%';
+
+      if (!lesson.comingSoon) {
+        el.addEventListener('click', () => switchLesson(lesson, true));
+      }
+      overlay.appendChild(el);
+    });
+  }
+
+  function setMapLayer(layerId) {
+    activeMapLayer = MAP_LAYERS.find(l => l.id === layerId) || MAP_LAYERS[0];
+    document.querySelectorAll('.map-layer-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.layer === layerId);
+    });
+    renderMap();
+  }
+
+  function openMap() {
+    renderMap();
+    mapModal.classList.add('open');
+  }
+
+  function closeMap() {
+    mapModal.classList.remove('open');
+  }
+
+  document.getElementById('mapBtn').addEventListener('click', openMap);
+  document.getElementById('mapCloseBtn').addEventListener('click', closeMap);
+  document.getElementById('mapBackdrop').addEventListener('click', closeMap);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMap(); });
+
+  document.getElementById('mapLayerNav').addEventListener('click', e => {
+    const btn = e.target.closest('.map-layer-btn');
+    if (btn) setMapLayer(btn.dataset.layer);
+  });
+
+  // ── Video toggle ───────────────────────────────────────────────────────
+
+  const videoPanel     = document.getElementById('videoPanel');
+  const videoToggleBtn = document.getElementById('videoToggleBtn');
+
+  videoToggleBtn.addEventListener('click', () => {
+    videoOpen = !videoOpen;
+    videoPanel.classList.toggle('video-open', videoOpen);
+    if (!videoOpen && chatMin) expandChat();
+  });
+
+  // ── Chat minimise ──────────────────────────────────────────────────────
+
+  const chatContainer = document.getElementById('chatContainer');
+  const chatSection   = document.getElementById('chatSection');
+  const chatMinBtn    = document.getElementById('chatMinBtn');
+  const chatHeader    = document.getElementById('chatHeader');
+
+  chatMinBtn.addEventListener('click', () => { chatMin ? expandChat() : minimiseChat(); });
+
+  chatHeader.addEventListener('click', e => {
+    if (chatMin && !e.target.closest('.chat-min-btn')) expandChat();
+  });
+
+  function minimiseChat() {
+    chatMin = true;
+    chatContainer.classList.add('chat-minimized');
+    chatSection.classList.add('panels-hidden');
+    if (!videoOpen) {
+      videoOpen = true;
+      videoPanel.classList.add('video-open');
+    }
+  }
+
+  function expandChat() {
+    chatMin = false;
+    chatContainer.classList.remove('chat-minimized');
+    chatSection.classList.remove('panels-hidden');
+  }
+
+  // ── Chat ───────────────────────────────────────────────────────────────
+
+  const messagesEl = document.getElementById('messages');
+  const inputEl    = document.getElementById('userInput');
+  const sendBtn    = document.getElementById('sendBtn');
+
+  inputEl.addEventListener('input', () => {
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 100) + 'px';
+  });
+
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  function scrollToBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  function addMessage(role, text) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `message ${role}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = text;
+    wrapper.appendChild(bubble);
+    messagesEl.appendChild(wrapper);
+    scrollToBottom();
+    return bubble;
+  }
+
+  function showTyping() {
+    const w = document.createElement('div');
+    w.className = 'message assistant'; w.id = 'typing';
+    w.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+    messagesEl.appendChild(w);
+    scrollToBottom();
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function showError(msg) {
+    const el = document.createElement('div');
+    el.className = 'error-message';
+    el.textContent = msg;
+    messagesEl.appendChild(el);
+    scrollToBottom();
+    setTimeout(() => el.remove(), 6000);
+  }
+
+  function revealPanels() {
+    if (panelsShown) return;
+    panelsShown = true;
+    document.getElementById('feedbackPanel').classList.add('visible');
+    document.getElementById('topicPanel').classList.add('visible');
+  }
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    if (chatMin) expandChat();
+
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    const welcome = messagesEl.querySelector('.welcome-message');
+    if (welcome) welcome.remove();
+
+    addMessage('user', text);
+    history.push({ role: 'user', content: text });
+    showTyping();
+
+    try {
+      const res = await fetch(CHAT_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message:  text,
+          messages: JSON.stringify(history),
+          lesson:   currentLesson.title
+        })
+      });
+
+      removeTyping();
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+
+      const rawText = await res.text();
+      let reply = 'No response received.';
+      try {
+        const data = JSON.parse(rawText);
+        reply = data.response || data.completion || data.content
+          || (data.choices?.[0]?.message?.content)
+          || reply;
+      } catch (e) {
+        if (rawText?.trim()) reply = rawText.trim();
+      }
+
+      addMessage('assistant', reply);
+      history.push({ role: 'assistant', content: reply });
+      revealPanels();
+
+    } catch (err) {
+      removeTyping();
+      showError('Something went wrong. Please try again.');
+      history.pop();
+    }
+
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }
+
+  // ── Stars ──────────────────────────────────────────────────────────────
+
+  let selectedStars = 0;
+  const stars = document.querySelectorAll('.star');
+
+  stars.forEach(star => {
+    star.addEventListener('mouseover', () => highlightStars(+star.dataset.value));
+    star.addEventListener('mouseout',  () => highlightStars(selectedStars));
+    star.addEventListener('click', () => { selectedStars = +star.dataset.value; highlightStars(selectedStars); });
+  });
+
+  function highlightStars(n) {
+    stars.forEach(s => s.classList.toggle('active', +s.dataset.value <= n));
+  }
+
+  // ── Feedback submit ────────────────────────────────────────────────────
+
+  document.getElementById('feedbackSubmit').addEventListener('click', async () => {
+    const btn = document.getElementById('feedbackSubmit');
+    const thanks = document.getElementById('feedbackThanks');
+    if (!selectedStars) { highlightStars(0); return; }
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await fetch(FEEDBACK_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stars:     selectedStars,
+          comment:   document.getElementById('feedbackComment').value.trim() || '',
+          lesson:    currentLesson.title,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (e) { console.error('Feedback error:', e); }
+    document.getElementById('feedbackComment').style.display = 'none';
+    document.getElementById('starRow').style.display         = 'none';
+    btn.style.display                                        = 'none';
+    thanks.style.display                                     = 'block';
+  });
+
+  // ── Topic submit ───────────────────────────────────────────────────────
+
+  document.getElementById('topicSubmit').addEventListener('click', async () => {
+    const btn = document.getElementById('topicSubmit');
+    const thanks = document.getElementById('topicThanks');
+    const inputField = document.getElementById('topicInput');
+    const suggestion = inputField.value.trim();
+    if (!suggestion) { inputField.focus(); return; }
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await fetch(TOPIC_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suggestion, timestamp: new Date().toISOString() })
+      });
+    } catch (e) { console.error('Topic error:', e); }
+    inputField.style.display = 'none';
+    btn.style.display        = 'none';
+    thanks.style.display     = 'block';
+  });
+
+</script>
+</body>
+</html>
